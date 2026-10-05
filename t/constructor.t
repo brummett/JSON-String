@@ -6,11 +6,20 @@ use Test::Exception;
 
 use JSON::String;
 
-sub expected_error {
-    my $expected = shift;
+# Detect the line number reporting behaviour of this version of perl
+our $use_block_end;
+BEGIN {
+    sub X { my (undef, undef, $line) = caller;
+                $use_block_end++ if ($line != shift); }
+    X __LINE__, # $use_block_end = 0
+    sub { }     # $use_block_end = 1
+};
+
+ sub expected_error {
+     my $expected = shift;
 
     my(undef, $file, $line) = caller();
-    $line--;
+    $line-- if $use_block_end;
     my $expected_error = quotemeta(sprintf('%s at %s line %s',
                                     $expected, $file, $line));
     return qr(^$expected_error);
